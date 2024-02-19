@@ -1,0 +1,36 @@
+replicaCount: 1
+
+image:
+  repository: betrayer25/book
+  pullPolicy: IfNotPresent
+  tag: latest
+
+
+service:
+  type: ClusterIP
+
+spring:
+  datasource:
+    url: jdbc:mysql://mysql:3306/book
+    username: root
+    password: N01canuse
+
+mysql:
+  rootPassword: "N01canuse"
+  database: "book"
+
+ingress:
+  enabled: true
+  annotations:
+  # Add your desired annotations here
+  hosts:
+    - host: my-app.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+serviceAccount:
+  create: true
+
+autoscaling:
+  enabled: false

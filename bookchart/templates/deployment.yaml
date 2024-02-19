@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookchart
+  labels:
+    app: bookchart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookchart
+  template:
+    metadata:
+      labels:
+        app: bookchart
+    spec:
+      serviceAccountName: my-service-account  # Reference to the ServiceAccount
+      containers:
+        - name: bookchart
+          image: betrayer25/book
+          ports:
+            - containerPort: 8080
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: bookchart
+                labels:
+                  app: bookchart
+              spec:
+                replicas: 1
+                selector:
+                  matchLabels:
+                    app: bookchart
+                template:
+                  metadata:
+                    labels:
+                      app: bookchart
+                  spec:
+                    serviceAccountName: my-service-account  # Reference to the ServiceAccount
+                    containers:
+                      - name: bookchart
+                        image: betrayer25/book
+                        ports:
+                          - containerPort: 8080

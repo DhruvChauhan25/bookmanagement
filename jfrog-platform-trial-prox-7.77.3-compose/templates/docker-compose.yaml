@@ -1,0 +1,140 @@
+version: '3'
+services:
+  artifactory:
+    image: ${DOCKER_REGISTRY}/jfrog/artifactory-pro:${ARTIFACTORY_VERSION}
+    container_name: artifactory
+    environment:
+    - JF_ROUTER_ENTRYPOINTS_EXTERNALPORT=${JF_ROUTER_ENTRYPOINTS_EXTERNALPORT}
+    ports:
+    - ${JF_ROUTER_ENTRYPOINTS_EXTERNALPORT}:${JF_ROUTER_ENTRYPOINTS_EXTERNALPORT} # 
+    - 8081:8081 # for artifactory communication
+    volumes:
+    - ${ROOT_DATA_DIR}/artifactory/var:/var/opt/jfrog/artifactory
+    - /etc/localtime:/etc/localtime:ro
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "10"
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 32000
+        hard: 40000
+  mongodb:
+    image: ${DOCKER_REGISTRY}/jfrog/xray-mongo:3.2.6
+    container_name: xray_mongodb
+    ports:
+    - ${JF_THIRD_PARTY_BIND_IP}:27017:27017
+    entrypoint: /bin/bash -c "chmod 777 /data/logs; /entrypoint.sh --logpath /data/logs/xray-mongo.log
+      --auth"
+    volumes:
+    - ${ROOT_DATA_DIR}/xray/var/data/mongodb/logs:/data/logs
+    - ${ROOT_DATA_DIR}/xray/var/data/mongodb/configdb:/data/configdb
+    - ${ROOT_DATA_DIR}/xray/var/data/mongodb/db:/data/db
+    - /etc/localtime:/etc/localtime:ro
+  router:
+    image: ${DOCKER_REGISTRY}/jfrog/router:${ROUTER_VERSION}
+    container_name: xray_router
+    user: "${XRAY_USER}:${XRAY_USER}"
+    environment:
+    - JF_ROUTER_TOPOLOGY_LOCAL_REQUIREDSERVICETYPES=jfxr,jfxidx,jfxana,jfxpst,jfob
+    - JF_ROUTER_ENTRYPOINTS_EXTERNALPORT=${JF_XRAY_ROUTER_ENTRYPOINTS_EXTERNALPORT}
+    ports:
+    - ${JF_XRAY_ROUTER_ENTRYPOINTS_EXTERNALPORT}:${JF_XRAY_ROUTER_ENTRYPOINTS_EXTERNALPORT} # for router communication
+    volumes:
+    - ${ROOT_DATA_DIR}/xray/var:/var/opt/jfrog/router
+    - /etc/localtime:/etc/localtime:ro
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "10"
+  observability:
+    image: ${DOCKER_REGISTRY}/jfrog/observability:${OBSERVABILITY_VERSION}
+    container_name: xray_observability
+    user: "${XRAY_USER}:${XRAY_USER}"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${ROOT_DATA_DIR}/xray/var:/var/opt/jfrog/observability
+    restart: always
+    network_mode: service:router
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "10"
+  xray-server:
+    image: ${DOCKER_REGISTRY}/jfrog/xray-server:${XRAY_VERSION}
+    container_name: xray_server
+    volumes:
+    - ${ROOT_DATA_DIR}/xray/var:/var/opt/jfrog/xray
+    - /etc/localtime:/etc/localtime:ro
+    restart: always
+    network_mode: service:router
+    ulimits:
+      nproc: 65535
+      nofile:
+        hard: 40000
+        soft: 32000
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "10"
+  xray-indexer:
+    image: ${DOCKER_REGISTRY}/jfrog/xray-indexer:${XRAY_VERSION}
+    container_name: xray_indexer
+    volumes:
+    - ${ROOT_DATA_DIR}/xray/var:/var/opt/jfrog/xray
+    - /etc/localtime:/etc/localtime:ro
+    restart: always
+    network_mode: service:router
+    ulimits:
+      nproc: 65535
+      nofile:
+        hard: 40000
+        soft: 32000
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "10"
+  xray-analysis:
+    image: ${DOCKER_REGISTRY}/jfrog/xray-analysis:${XRAY_VERSION}
+    container_name: xray_analysis
+    volumes:
+    - ${ROOT_DATA_DIR}/xray/var:/var/opt/jfrog/xray
+    - /etc/localtime:/etc/localtime:ro
+    restart: always
+    network_mode: service:router
+    ulimits:
+      nproc: 65535
+      nofile:
+        hard: 40000
+        soft: 32000
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "10"
+  xray-persist:
+    image: ${DOCKER_REGISTRY}/jfrog/xray-persist:${XRAY_VERSION}
+    container_name: xray_persist
+    volumes:
+    - ${ROOT_DATA_DIR}/xray/var:/var/opt/jfrog/xray
+    - /etc/localtime:/etc/localtime:ro
+    restart: always
+    network_mode: service:router
+    ulimits:
+      nproc: 65535
+      nofile:
+        hard: 40000
+        soft: 32000
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "10"

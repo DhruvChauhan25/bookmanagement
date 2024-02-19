@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fakesmtp
+  labels:
+    app: fakesmtp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fakesmtp
+  template:
+    metadata:
+      labels:
+        app: fakesmtp
+    spec:
+      containers:
+        - name: fakesmtp
+          image: djfarrelly/maildev
+          ports:
+            - containerPort: 25

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: fakesmtp
+  labels:
+    app: fakesmtp
+spec:
+  ports:
+    - port: 25  # Port that the service will listen on
+      targetPort: 25  # Port that the container listens on
+  selector:
+    app: fakesmtp
